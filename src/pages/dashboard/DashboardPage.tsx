@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts'
 import { useDashboard } from '@/hooks/useDashboard'
 import { useEleves } from '@/hooks/useEleves'
@@ -221,7 +221,6 @@ export function DashboardPage() {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number, name: string) => [value, name]}
                   contentStyle={{ borderRadius: 8, border: '1px solid #E2E8F0', fontSize: 12 }}
                 />
               </PieChart>
