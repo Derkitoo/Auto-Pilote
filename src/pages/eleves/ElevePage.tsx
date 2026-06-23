@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Pencil, Trash2, Phone, Mail, MapPin, Calendar, Clock, CalendarDays } from 'lucide-react'
 import { useEleve, useUpdateEleve, useDeleteEleve } from '@/hooks/useEleves'
 import { useLecons } from '@/hooks/useLecons'
+import { useAuth } from '@/contexts/AuthContext'
 import { StatutBadge } from '@/components/eleves/StatutBadge'
 import { EleveForm } from '@/components/eleves/EleveForm'
 import { Avatar } from '@/components/ui/avatar'
@@ -15,6 +16,8 @@ import type { StatutLecon } from '@/types'
 export function ElevePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const isGerant = user?.role === 'gerant'
   const { data: eleve, isLoading } = useEleve(id!)
   const { data: lecons, isLoading: leconsLoading } = useLecons({ eleve_id: id })
   const updateEleve = useUpdateEleve()
@@ -68,10 +71,12 @@ export function ElevePage() {
             <Pencil className="w-3.5 h-3.5" />
             Modifier
           </Button>
-          <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)}>
-            <Trash2 className="w-3.5 h-3.5" />
-            Supprimer
-          </Button>
+          {isGerant && (
+            <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)}>
+              <Trash2 className="w-3.5 h-3.5" />
+              Supprimer
+            </Button>
+          )}
         </div>
       </div>
 
@@ -217,8 +222,8 @@ export function ElevePage() {
         />
       </Modal>
 
-      {/* Modal confirmation suppression */}
-      <Modal open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title="Supprimer l'élève" size="sm">
+      {/* Modal confirmation suppression — gérant uniquement */}
+      <Modal open={isGerant && showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title="Supprimer l'élève" size="sm">
         <p className="text-sm text-[#64748B] mb-4">
           Êtes-vous sûr de vouloir supprimer <strong>{eleve.prenom} {eleve.nom}</strong> ? Cette action est irréversible.
         </p>

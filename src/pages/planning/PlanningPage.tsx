@@ -369,14 +369,16 @@ export function PlanningPage() {
               onCancel={() => { setShowEdit(false); setSelectedLecon(null) }}
               isLoading={updateLecon.isPending}
             />
-            <div className="mt-3 pt-3 border-t border-[#E2E8F0]">
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="text-xs text-[#DC2626] hover:underline"
-              >
-                Supprimer cette leçon
-              </button>
-            </div>
+            {!isMoniteur && (
+              <div className="mt-3 pt-3 border-t border-[#E2E8F0]">
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-xs text-[#DC2626] hover:underline"
+                >
+                  Supprimer cette leçon
+                </button>
+              </div>
+            )}
           </>
         )}
         {selectedLecon && showDeleteConfirm && (

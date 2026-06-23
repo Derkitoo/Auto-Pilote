@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Plus, Award, CheckCircle, XCircle, AlertTriangle, Clock } from 'lucide-react'
 import { useExamens, useCreateExamen, useUpdateExamen, useDeleteExamen } from '@/hooks/useExamens'
 import { useEleves } from '@/hooks/useEleves'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -30,6 +31,8 @@ function ResultatBadge({ resultat }: { resultat: ResultatExamen | null }) {
 }
 
 export function ExamensPage() {
+  const { user } = useAuth()
+  const isGerant = user?.role === 'gerant'
   const { data: examens, isLoading } = useExamens()
   const { data: eleves } = useEleves()
   const createExamen = useCreateExamen()
@@ -157,7 +160,9 @@ export function ExamensPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1 justify-end">
                         <button onClick={() => { setSelected(e); setShowEdit(true) }} className="text-xs text-[#2563EB] hover:underline px-2 py-1 rounded hover:bg-[#EFF6FF] transition-colors">Modifier</button>
-                        <button onClick={() => { setSelected(e); setShowDelete(true) }} className="text-xs text-[#DC2626] hover:underline px-2 py-1 rounded hover:bg-[#FEF2F2] transition-colors">Suppr.</button>
+                        {isGerant && (
+                          <button onClick={() => { setSelected(e); setShowDelete(true) }} className="text-xs text-[#DC2626] hover:underline px-2 py-1 rounded hover:bg-[#FEF2F2] transition-colors">Suppr.</button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -196,7 +201,7 @@ export function ExamensPage() {
         )}
       </Modal>
 
-      <Modal open={showDelete && !!selected} onClose={() => { setShowDelete(false); setSelected(null) }} title="Supprimer l'examen" size="sm">
+      <Modal open={isGerant && showDelete && !!selected} onClose={() => { setShowDelete(false); setSelected(null) }} title="Supprimer l'examen" size="sm">
         <p className="text-sm text-[#64748B] mb-4">
           Supprimer l'examen <strong>{selected?.type === 'code' ? 'Code' : 'Conduite'}</strong> de <strong>{selected?.eleve?.prenom} {selected?.eleve?.nom}</strong> ?
         </p>
