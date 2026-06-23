@@ -20,6 +20,7 @@ import { EleveAccueilPage } from '@/pages/eleve-space/EleveAccueilPage'
 import { ElevePlanningPage } from '@/pages/eleve-space/ElevePlanningPage'
 import { EleveExamensPage } from '@/pages/eleve-space/EleveExamensPage'
 import { EleveFacturesPage } from '@/pages/eleve-space/EleveFacturesPage'
+import { NotFoundPage } from '@/pages/NotFoundPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,6 +67,7 @@ function App() {
                 <Route path="/eleve/factures" element={<EleveFacturesPage />} />
               </Route>
             </Route>
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
           <Toaster position="top-right" />
         </HashRouter>

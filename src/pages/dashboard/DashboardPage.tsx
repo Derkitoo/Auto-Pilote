@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Users, CalendarDays, Euro, AlertCircle,
@@ -5,33 +6,78 @@ import {
 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer,
+  Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from 'recharts'
 import { useDashboard } from '@/hooks/useDashboard'
 import { useEleves } from '@/hooks/useEleves'
+import { useLecons } from '@/hooks/useLecons'
 import { StatutBadge } from '@/components/eleves/StatutBadge'
 import { Avatar } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate, formatMontant, formatDateTime } from '@/lib/utils'
 
-// Données graphique simulées (30 derniers jours)
-const activiteData = Array.from({ length: 8 }, (_, i) => ({
-  semaine: `S${i + 1}`,
-  lecons: Math.floor(Math.random() * 12) + 4,
-  eleves: Math.floor(Math.random() * 4) + 1,
-}))
+const STATUT_COLORS: Record<string, string> = {
+  prospect:          '#94A3B8',
+  inscrit:           '#60A5FA',
+  en_formation:      '#2563EB',
+  examen_code:       '#D97706',
+  examen_conduite:   '#F59E0B',
+  diplome:           '#16A34A',
+  abandonne:         '#DC2626',
+}
+
+const STATUT_LABELS: Record<string, string> = {
+  prospect:        'Prospect',
+  inscrit:         'Inscrit',
+  en_formation:    'En formation',
+  examen_code:     'Examen code',
+  examen_conduite: 'Examen conduite',
+  diplome:         'Diplômé',
+  abandonne:       'Abandonné',
+}
 
 export function DashboardPage() {
   const navigate = useNavigate()
   const { data: stats, isLoading: statsLoading } = useDashboard()
   const { data: eleves, isLoading: elevesLoading } = useEleves()
+  const { data: lecons } = useLecons()
 
   const isLoading = statsLoading || elevesLoading
 
+  // Élèves récents
   const elevesRecents = eleves
     ?.slice()
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5)
+
+  // Activité réelle : leçons effectuées par semaine sur les 8 dernières semaines
+  const activiteData = useMemo(() => {
+    const now = new Date()
+    return Array.from({ length: 8 }, (_, i) => {
+      const weekStart = new Date(now)
+      weekStart.setDate(now.getDate() - (7 - i) * 7)
+      weekStart.setHours(0, 0, 0, 0)
+      const weekEnd = new Date(weekStart)
+      weekEnd.setDate(weekStart.getDate() + 7)
+      return {
+        semaine: i === 7 ? 'Cette sem.' : `S-${7 - i}`,
+        lecons: lecons?.filter(l => {
+          const d = new Date(l.date_debut)
+          return d >= weekStart && d < weekEnd
+        }).length ?? 0,
+      }
+    })
+  }, [lecons])
+
+  // Répartition des statuts élèves
+  const statutsData = useMemo(() => {
+    if (!eleves) return []
+    const map: Record<string, number> = {}
+    eleves.forEach(e => { map[e.statut] = (map[e.statut] ?? 0) + 1 })
+    return Object.entries(map)
+      .filter(([, count]) => count > 0)
+      .map(([statut, count]) => ({ statut, label: STATUT_LABELS[statut] ?? statut, count }))
+  }, [eleves])
 
   return (
     <div className="space-y-6">
@@ -75,14 +121,15 @@ export function DashboardPage() {
         )}
       </div>
 
+      {/* Graphiques */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
 
-        {/* Graphique activité */}
+        {/* Graphique activité réel */}
         <div className="md:col-span-2 bg-white rounded-xl border border-[#E2E8F0] p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-semibold text-[#0F172A]">Activité — 8 dernières semaines</h3>
-              <p className="text-xs text-[#64748B]">Nombre de leçons effectuées</p>
+              <p className="text-xs text-[#64748B]">Nombre de leçons planifiées</p>
             </div>
             <TrendingUp className="w-4 h-4 text-[#64748B]" />
           </div>
@@ -96,7 +143,7 @@ export function DashboardPage() {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
               <XAxis dataKey="semaine" tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip
                 contentStyle={{ borderRadius: 8, border: '1px solid #E2E8F0', fontSize: 12 }}
                 itemStyle={{ color: '#0F172A' }}
@@ -151,6 +198,46 @@ export function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Répartition statuts élèves */}
+      {!elevesLoading && statutsData.length > 0 && (
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-5">
+          <h3 className="text-sm font-semibold text-[#0F172A] mb-4">Répartition des élèves par statut</h3>
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <ResponsiveContainer width={200} height={180}>
+              <PieChart>
+                <Pie
+                  data={statutsData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={3}
+                  dataKey="count"
+                  nameKey="label"
+                >
+                  {statutsData.map(entry => (
+                    <Cell key={entry.statut} fill={STATUT_COLORS[entry.statut] ?? '#E2E8F0'} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number, name: string) => [value, name]}
+                  contentStyle={{ borderRadius: 8, border: '1px solid #E2E8F0', fontSize: 12 }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex flex-wrap gap-2 flex-1">
+              {statutsData.map(entry => (
+                <div key={entry.statut} className="flex items-center gap-2 min-w-0">
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: STATUT_COLORS[entry.statut] ?? '#E2E8F0' }} />
+                  <span className="text-xs text-[#64748B]">{entry.label}</span>
+                  <span className="text-xs font-semibold text-[#0F172A]">{entry.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Derniers élèves */}
       <div className="bg-white rounded-xl border border-[#E2E8F0]">

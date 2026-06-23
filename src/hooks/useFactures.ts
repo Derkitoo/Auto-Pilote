@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import { fetchFactures, createFacture, updateFacture, deleteFacture } from '@/data/api'
 import type { Facture } from '@/types'
 
@@ -18,7 +19,8 @@ export function useCreateFacture() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: Parameters<typeof createFacture>[0]) => createFacture(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.all }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: KEYS.all }); toast.success('Facture créée') },
+    onError: () => toast.error('Erreur lors de la création'),
   })
 }
 
@@ -27,7 +29,8 @@ export function useUpdateFacture() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Parameters<typeof updateFacture>[1] }) =>
       updateFacture(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.all }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: KEYS.all }); toast.success('Facture mise à jour') },
+    onError: () => toast.error('Erreur lors de la mise à jour'),
   })
 }
 
@@ -35,7 +38,8 @@ export function useDeleteFacture() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => deleteFacture(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.all }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: KEYS.all }); toast.success('Facture supprimée') },
+    onError: () => toast.error('Erreur lors de la suppression'),
   })
 }
 
