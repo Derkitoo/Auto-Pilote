@@ -1,13 +1,13 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, CalendarDays, UserCheck, Settings } from 'lucide-react'
+import { LayoutDashboard, Users, CalendarDays, Receipt, Award } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/eleves', icon: Users, label: 'Élèves' },
-  { to: '/planning', icon: CalendarDays, label: 'Planning' },
-  { to: '/moniteurs', icon: UserCheck, label: 'Moniteurs' },
-  { to: '/settings', icon: Settings, label: 'Réglages' },
+  { to: '/dashboard',   icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/eleves',      icon: Users,           label: 'Élèves' },
+  { to: '/planning',    icon: CalendarDays,    label: 'Planning' },
+  { to: '/facturation', icon: Receipt,         label: 'Factures' },
+  { to: '/examens',     icon: Award,           label: 'Examens' },
 ]
 
 export function BottomNav() {

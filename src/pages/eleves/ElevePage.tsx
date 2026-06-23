@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Pencil, Trash2, Phone, Mail, MapPin, Calendar, Clock } from 'lucide-react'
+import { ArrowLeft, Pencil, Trash2, Phone, Mail, MapPin, Calendar, Clock, CalendarDays } from 'lucide-react'
 import { useEleve, useUpdateEleve, useDeleteEleve } from '@/hooks/useEleves'
+import { useLecons } from '@/hooks/useLecons'
 import { StatutBadge } from '@/components/eleves/StatutBadge'
 import { EleveForm } from '@/components/eleves/EleveForm'
 import { Avatar } from '@/components/ui/avatar'
@@ -9,11 +10,13 @@ import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/lib/utils'
+import type { StatutLecon } from '@/types'
 
 export function ElevePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: eleve, isLoading } = useEleve(id!)
+  const { data: lecons, isLoading: leconsLoading } = useLecons({ eleve_id: id })
   const updateEleve = useUpdateEleve()
   const deleteEleve = useDeleteEleve()
 
@@ -148,6 +151,38 @@ export function ElevePage() {
         </div>
       )}
 
+      {/* Historique leçons */}
+      <div className="bg-white rounded-xl border border-[#E2E8F0]">
+        <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[#E2E8F0] bg-[#F8FAFC]">
+          <CalendarDays className="w-4 h-4 text-[#64748B]" />
+          <h3 className="text-sm font-semibold text-[#0F172A]">Historique des leçons</h3>
+          <span className="ml-auto text-xs text-[#94A3B8]">{lecons?.length ?? 0} leçon{(lecons?.length ?? 0) > 1 ? 's' : ''}</span>
+        </div>
+        {leconsLoading ? (
+          <div className="p-4 space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
+          </div>
+        ) : !lecons?.length ? (
+          <div className="py-10 text-center text-sm text-[#64748B]">Aucune leçon enregistrée.</div>
+        ) : (
+          <div className="divide-y divide-[#E2E8F0]">
+            {lecons.sort((a, b) => new Date(b.date_debut).getTime() - new Date(a.date_debut).getTime()).map(l => (
+              <div key={l.id} className="flex items-center gap-3 px-5 py-3">
+                <div className="w-1 h-8 rounded-full shrink-0" style={{ backgroundColor: l.moniteur?.couleur_agenda ?? '#E2E8F0' }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[#0F172A]">
+                    {formatDate(l.date_debut, "dd/MM/yyyy 'à' HH:mm")}
+                    <span className="text-[#94A3B8] font-normal"> → {formatDate(l.date_fin, 'HH:mm')}</span>
+                  </p>
+                  <p className="text-xs text-[#64748B]">{l.moniteur?.prenom} {l.moniteur?.nom} · {l.type.replace(/_/g, ' ')}</p>
+                </div>
+                <LeconStatut statut={l.statut} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Notes */}
       {eleve.notes && (
         <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
@@ -195,6 +230,24 @@ export function ElevePage() {
         </div>
       </Modal>
     </div>
+  )
+}
+
+const STATUT_LECON_CONFIG: Record<StatutLecon, { label: string; color: string }> = {
+  planifiee:        { label: 'Planifiée',   color: '#D97706' },
+  confirmee:        { label: 'Confirmée',   color: '#2563EB' },
+  effectuee:        { label: 'Effectuée',   color: '#16A34A' },
+  annulee_eleve:    { label: 'Annulée',     color: '#DC2626' },
+  annulee_moniteur: { label: 'Annulée',     color: '#DC2626' },
+  no_show:          { label: 'No-show',     color: '#64748B' },
+}
+
+function LeconStatut({ statut }: { statut: StatutLecon }) {
+  const { label, color } = STATUT_LECON_CONFIG[statut]
+  return (
+    <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: `${color}15`, color }}>
+      {label}
+    </span>
   )
 }
 

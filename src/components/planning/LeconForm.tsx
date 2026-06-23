@@ -6,6 +6,8 @@ import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { useEleves } from '@/hooks/useEleves'
 import { useMoniteurs } from '@/hooks/useMoniteurs'
+import { useVehicules } from '@/hooks/useVehicules'
+import { categorieFromPermis } from '@/types'
 import type { Lecon } from '@/types'
 
 const leconSchema = z.object({
@@ -53,13 +55,14 @@ function toDateTimeLocal(iso: string) {
 export function LeconForm({ defaultValues, onSubmit, onCancel, isLoading }: LeconFormProps) {
   const { data: eleves } = useEleves()
   const { data: moniteurs } = useMoniteurs()
+  const { data: vehicules } = useVehicules()
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LeconFormValues>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<LeconFormValues>({
     resolver: zodResolver(leconSchema),
     defaultValues: {
       eleve_id: defaultValues?.eleve_id ?? '',
       moniteur_id: defaultValues?.moniteur_id ?? '',
-      vehicule_id: defaultValues?.vehicule_id ?? null,
+      vehicule_id: defaultValues?.vehicule_id ?? '',
       date_debut: defaultValues?.date_debut ? toDateTimeLocal(defaultValues.date_debut) : '',
       date_fin: defaultValues?.date_fin ? toDateTimeLocal(defaultValues.date_fin) : '',
       type: defaultValues?.type ?? 'conduite',
@@ -69,14 +72,31 @@ export function LeconForm({ defaultValues, onSubmit, onCancel, isLoading }: Leco
     },
   })
 
+  const selectedEleveId = watch('eleve_id')
+  const selectedEleve = eleves?.find(e => e.id === selectedEleveId)
+
+  // Filtre les véhicules selon la catégorie du permis visé
+  const vehiculesFiltres = vehicules?.filter(v => {
+    if (!selectedEleve) return v.actif
+    return v.actif && v.categorie === categorieFromPermis(selectedEleve.permis_vise)
+  }) ?? []
+
   const elevesOptions = [
     { value: '', label: '-- Sélectionner un élève --' },
-    ...(eleves?.map(e => ({ value: e.id, label: `${e.prenom} ${e.nom}` })) ?? []),
+    ...(eleves?.map(e => ({ value: e.id, label: `${e.prenom} ${e.nom} (Permis ${e.permis_vise})` })) ?? []),
   ]
 
   const moniteursOptions = [
     { value: '', label: '-- Sélectionner un moniteur --' },
     ...(moniteurs?.map(m => ({ value: m.id, label: `${m.prenom} ${m.nom}` })) ?? []),
+  ]
+
+  const vehiculesOptions = [
+    { value: '', label: selectedEleve ? `-- Véhicule (${categorieFromPermis(selectedEleve.permis_vise)}) --` : '-- Sélectionner d\'abord un élève --' },
+    ...vehiculesFiltres.map(v => ({
+      value: v.id,
+      label: `${v.marque} ${v.modele} · ${v.type_boite === 'manuelle' ? 'BVM' : 'BVA'} (${v.immatriculation})`,
+    })),
   ]
 
   return (
@@ -131,6 +151,14 @@ export function LeconForm({ defaultValues, onSubmit, onCancel, isLoading }: Leco
           {...register('statut')}
         />
       </div>
+
+      <Select
+        id="vehicule_id"
+        label="Véhicule"
+        options={vehiculesOptions}
+        disabled={!selectedEleveId}
+        {...register('vehicule_id')}
+      />
 
       <Input
         id="lieu_rdv"

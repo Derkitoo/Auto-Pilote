@@ -14,14 +14,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/lib/utils'
 import type { Lecon, StatutLecon } from '@/types'
 
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek: () => startOfWeek(new Date(), { locale: fr }),
-  getDay,
-  locales: { fr },
-})
-
 type CalendarView = 'month' | 'week' | 'day' | 'agenda'
 
 interface CalEvent extends Event {
@@ -29,6 +21,57 @@ interface CalEvent extends Event {
   lecon: Lecon
   color: string
 }
+
+// Icônes légères pour moto vs voiture (SVG inline, pas de dépendance externe)
+function IconeMoto({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="3.5" cy="9" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+      <circle cx="16.5" cy="9" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M3.5 9 L6 5 L10 5 L13 3 L16.5 5 L16.5 9" fill="none" stroke="currentColor" strokeWidth="1.2"/>
+    </svg>
+  )
+}
+
+function IconeVoiture({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="4.5" cy="9.5" r="1.8" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+      <circle cx="15.5" cy="9.5" r="1.8" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M2 8 L3 4.5 L6 3 L14 3 L17 4.5 L18 8 Z" fill="none" stroke="currentColor" strokeWidth="1.2"/>
+      <path d="M6 3 L7 6.5 L13 6.5 L14 3" fill="none" stroke="currentColor" strokeWidth="0.8"/>
+    </svg>
+  )
+}
+
+function EventCalendrier({ event }: { event: CalEvent }) {
+  const cat = event.lecon.vehicule?.categorie
+  const boite = event.lecon.vehicule?.type_boite
+  return (
+    <div className="flex items-center gap-1 h-full overflow-hidden">
+      {cat === 'moto'
+        ? <IconeMoto className="w-4 h-3 shrink-0 opacity-90" />
+        : <IconeVoiture className="w-4 h-3 shrink-0 opacity-90" />
+      }
+      <span className="truncate text-[11px] leading-tight flex-1">
+        {event.lecon.eleve?.prenom} {event.lecon.eleve?.nom}
+      </span>
+      {boite && (
+        <span className="shrink-0 text-[9px] font-bold bg-white/25 rounded px-0.5 leading-tight">
+          {boite === 'manuelle' ? 'BVM' : 'BVA'}
+        </span>
+      )}
+    </div>
+  )
+}
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek: () => startOfWeek(new Date(), { locale: fr }),
+  getDay,
+  locales: { fr },
+})
 
 const STATUT_OPACITY: Record<StatutLecon, number> = {
   planifiee: 0.7,
@@ -241,6 +284,7 @@ export function PlanningPage() {
             onNavigate={setDate}
             onView={(v) => setVue(v as CalendarView)}
             eventPropGetter={eventPropGetter}
+            components={{ event: EventCalendrier }}
             onSelectEvent={handleSelectEvent}
             onSelectSlot={handleSelectSlot}
             selectable

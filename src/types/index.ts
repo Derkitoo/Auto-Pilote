@@ -17,6 +17,18 @@ export type TypeFinancement = 'personnel' | 'cpf' | 'permis_a_un_euro' | 'aidant
 
 export type TypeBoite = 'manuelle' | 'automatique'
 
+export type CategorieVehicule = 'voiture' | 'moto' | 'camion'
+
+export const PERMIS_MOTO: TypePermis[] = ['A', 'A2', 'A1', 'AM']
+export const PERMIS_VOITURE: TypePermis[] = ['B', 'BE']
+export const PERMIS_CAMION: TypePermis[] = ['C', 'CE', 'D']
+
+export function categorieFromPermis(permis: TypePermis): CategorieVehicule {
+  if (PERMIS_MOTO.includes(permis)) return 'moto'
+  if (PERMIS_CAMION.includes(permis)) return 'camion'
+  return 'voiture'
+}
+
 export type StatutLecon =
   | 'planifiee'
   | 'confirmee'
@@ -118,6 +130,7 @@ export interface Vehicule {
   immatriculation: string
   marque: string
   modele: string
+  categorie: CategorieVehicule
   type_boite: TypeBoite
   annee: number
   kilometrage: number
@@ -143,8 +156,9 @@ export interface Lecon {
   created_at: string
   updated_at: string
   // Relations
-  eleve?: Pick<Eleve, 'id' | 'prenom' | 'nom'>
+  eleve?: Pick<Eleve, 'id' | 'prenom' | 'nom' | 'permis_vise'>
   moniteur?: Pick<Moniteur, 'id' | 'prenom' | 'nom' | 'couleur_agenda'>
+  vehicule?: Pick<Vehicule, 'id' | 'marque' | 'modele' | 'type_boite' | 'categorie'>
 }
 
 // ─── Évaluation ─────────────────────────────────────────────────────────────

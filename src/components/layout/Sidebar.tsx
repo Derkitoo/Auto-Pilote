@@ -8,16 +8,20 @@ import {
   Car,
   ChevronLeft,
   ChevronRight,
+  Receipt,
+  Award,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 
 const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
-  { to: '/eleves', icon: Users, label: 'Élèves' },
-  { to: '/planning', icon: CalendarDays, label: 'Planning' },
-  { to: '/moniteurs', icon: UserCheck, label: 'Moniteurs' },
-  { to: '/vehicules', icon: Car, label: 'Véhicules' },
+  { to: '/dashboard',   icon: LayoutDashboard, label: 'Tableau de bord' },
+  { to: '/eleves',      icon: Users,           label: 'Élèves' },
+  { to: '/planning',    icon: CalendarDays,    label: 'Planning' },
+  { to: '/moniteurs',   icon: UserCheck,       label: 'Moniteurs' },
+  { to: '/vehicules',   icon: Car,             label: 'Véhicules' },
+  { to: '/facturation', icon: Receipt,         label: 'Facturation' },
+  { to: '/examens',     icon: Award,           label: 'Examens' },
 ]
 
 export function Sidebar() {
