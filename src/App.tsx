@@ -22,6 +22,7 @@ import { EleveExamensPage } from '@/pages/eleve-space/EleveExamensPage'
 import { EleveFacturesPage } from '@/pages/eleve-space/EleveFacturesPage'
 import { EleveEvaluationsPage } from '@/pages/eleve-space/EleveEvaluationsPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,6 +73,7 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
           <Toaster position="top-right" />
+          <InstallPrompt />
         </HashRouter>
       </AuthProvider>
     </QueryClientProvider>
