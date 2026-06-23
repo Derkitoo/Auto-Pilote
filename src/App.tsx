@@ -36,17 +36,23 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/" element={<RootRedirect />} />
 
-            {/* Espace gérant / moniteur */}
+            {/* Routes accessibles à gérant + moniteur */}
             <Route element={<ProtectedRoute allowedRoles={['gerant', 'moniteur', 'secretaire']} />}>
               <Route element={<Layout />}>
-                <Route path="/dashboard"   element={<DashboardPage />} />
-                <Route path="/eleves"      element={<ElevesPage />} />
-                <Route path="/eleves/:id"  element={<ElevePage />} />
-                <Route path="/planning"    element={<PlanningPage />} />
+                <Route path="/dashboard"  element={<DashboardPage />} />
+                <Route path="/eleves"     element={<ElevesPage />} />
+                <Route path="/eleves/:id" element={<ElevePage />} />
+                <Route path="/planning"   element={<PlanningPage />} />
+                <Route path="/examens"    element={<ExamensPage />} />
+              </Route>
+            </Route>
+
+            {/* Routes gérant uniquement */}
+            <Route element={<ProtectedRoute allowedRoles={['gerant', 'secretaire']} />}>
+              <Route element={<Layout />}>
                 <Route path="/moniteurs"   element={<MoniteursPage />} />
                 <Route path="/vehicules"   element={<VehiculesPage />} />
                 <Route path="/facturation" element={<FacturationPage />} />
-                <Route path="/examens"     element={<ExamensPage />} />
                 <Route path="/settings"    element={<SettingsPage />} />
               </Route>
             </Route>
