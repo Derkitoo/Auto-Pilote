@@ -237,6 +237,19 @@ export async function createEvaluation(data: Omit<Evaluation, 'id' | 'created_at
   return { ...nouvelle }
 }
 
+export async function updateEvaluation(id: string, data: Partial<Omit<Evaluation, 'id' | 'created_at'>>): Promise<Evaluation> {
+  await delay()
+  _evaluations = _evaluations.map(e => e.id === id ? { ...e, ...data } : e)
+  const updated = _evaluations.find(e => e.id === id)
+  if (!updated) throw new Error(`Évaluation ${id} introuvable`)
+  return { ...updated }
+}
+
+export async function deleteEvaluation(id: string): Promise<void> {
+  await delay()
+  _evaluations = _evaluations.filter(e => e.id !== id)
+}
+
 // ─── Factures ─────────────────────────────────────────────────────────────────
 
 function enrichirFacture(f: Facture): Facture {

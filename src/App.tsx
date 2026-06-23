@@ -20,6 +20,7 @@ import { EleveAccueilPage } from '@/pages/eleve-space/EleveAccueilPage'
 import { ElevePlanningPage } from '@/pages/eleve-space/ElevePlanningPage'
 import { EleveExamensPage } from '@/pages/eleve-space/EleveExamensPage'
 import { EleveFacturesPage } from '@/pages/eleve-space/EleveFacturesPage'
+import { EleveEvaluationsPage } from '@/pages/eleve-space/EleveEvaluationsPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
 const queryClient = new QueryClient({
@@ -64,7 +65,8 @@ function App() {
                 <Route path="/eleve/accueil"  element={<EleveAccueilPage />} />
                 <Route path="/eleve/planning" element={<ElevePlanningPage />} />
                 <Route path="/eleve/examens"  element={<EleveExamensPage />} />
-                <Route path="/eleve/factures" element={<EleveFacturesPage />} />
+                <Route path="/eleve/factures"     element={<EleveFacturesPage />} />
+                <Route path="/eleve/evaluations" element={<EleveEvaluationsPage />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFoundPage />} />

@@ -1,13 +1,14 @@
 import { Outlet, NavLink } from 'react-router-dom'
-import { Home, CalendarDays, Award, Receipt, LogOut } from 'lucide-react'
+import { Home, CalendarDays, Award, Receipt, Star, LogOut } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { to: '/eleve/accueil',    icon: Home,        label: 'Accueil' },
-  { to: '/eleve/planning',   icon: CalendarDays, label: 'Planning' },
-  { to: '/eleve/examens',    icon: Award,        label: 'Examens' },
-  { to: '/eleve/factures',   icon: Receipt,      label: 'Factures' },
+  { to: '/eleve/accueil',      icon: Home,        label: 'Accueil' },
+  { to: '/eleve/planning',     icon: CalendarDays, label: 'Planning' },
+  { to: '/eleve/examens',      icon: Award,        label: 'Examens' },
+  { to: '/eleve/factures',     icon: Receipt,      label: 'Factures' },
+  { to: '/eleve/evaluations',  icon: Star,         label: 'Évals' },
 ]
 
 export function EleveLayout() {

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { fetchEvaluations, createEvaluation } from '@/data/api'
+import { fetchEvaluations, createEvaluation, updateEvaluation, deleteEvaluation } from '@/data/api'
 
 const KEYS = {
   all: ['evaluations'] as const,
@@ -19,10 +19,26 @@ export function useCreateEvaluation() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: Parameters<typeof createEvaluation>[0]) => createEvaluation(data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: KEYS.all })
-      toast.success('Évaluation enregistrée')
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: KEYS.all }); toast.success('Évaluation enregistrée') },
     onError: () => toast.error("Erreur lors de l'enregistrement"),
+  })
+}
+
+export function useUpdateEvaluation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof updateEvaluation>[1] }) =>
+      updateEvaluation(id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: KEYS.all }); toast.success('Évaluation mise à jour') },
+    onError: () => toast.error('Erreur lors de la mise à jour'),
+  })
+}
+
+export function useDeleteEvaluation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteEvaluation(id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: KEYS.all }); toast.success('Évaluation supprimée') },
+    onError: () => toast.error('Erreur lors de la suppression'),
   })
 }

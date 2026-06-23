@@ -9,7 +9,7 @@ import { useEleve, useUpdateEleve, useDeleteEleve } from '@/hooks/useEleves'
 import { useLecons } from '@/hooks/useLecons'
 import { useExamens } from '@/hooks/useExamens'
 import { useFactures } from '@/hooks/useFactures'
-import { useEvaluations, useCreateEvaluation } from '@/hooks/useEvaluations'
+import { useEvaluations, useCreateEvaluation, useUpdateEvaluation, useDeleteEvaluation } from '@/hooks/useEvaluations'
 import { useAuth } from '@/contexts/AuthContext'
 import { StatutBadge } from '@/components/eleves/StatutBadge'
 import { EleveForm } from '@/components/eleves/EleveForm'
@@ -46,11 +46,16 @@ export function ElevePage() {
   const updateEleve = useUpdateEleve()
   const deleteEleve = useDeleteEleve()
   const createEvaluation = useCreateEvaluation()
+  const updateEvaluation = useUpdateEvaluation()
+  const deleteEvaluation = useDeleteEvaluation()
 
   const [onglet, setOnglet] = useState<Onglet>('infos')
   const [showEdit, setShowEdit] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showEvalForm, setShowEvalForm] = useState(false)
+  const [selectedEval, setSelectedEval] = useState<Evaluation | null>(null)
+  const [showEditEval, setShowEditEval] = useState(false)
+  const [showDeleteEval, setShowDeleteEval] = useState(false)
 
   if (isLoading) {
     return (
@@ -346,7 +351,14 @@ export function ElevePage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {evaluations.map(ev => <EvaluationCard key={ev.id} evaluation={ev} />)}
+              {evaluations.map(ev => (
+                <EvaluationCard
+                  key={ev.id}
+                  evaluation={ev}
+                  onEdit={() => { setSelectedEval(ev); setShowEditEval(true) }}
+                  onDelete={() => { setSelectedEval(ev); setShowDeleteEval(true) }}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -394,6 +406,7 @@ export function ElevePage() {
       {/* Modal nouvelle évaluation */}
       <Modal open={showEvalForm} onClose={() => setShowEvalForm(false)} title="Nouvelle évaluation" size="md">
         <EvaluationForm
+          mode="create"
           eleveId={eleve.id}
           lecons={leconsEffectuees}
           onSubmit={async (data) => {
@@ -403,6 +416,39 @@ export function ElevePage() {
           onCancel={() => setShowEvalForm(false)}
           isLoading={createEvaluation.isPending}
         />
+      </Modal>
+
+      {/* Modal modifier évaluation */}
+      <Modal open={showEditEval && !!selectedEval} onClose={() => { setShowEditEval(false); setSelectedEval(null) }} title="Modifier l'évaluation" size="md">
+        {selectedEval && (
+          <EvaluationForm
+            mode="edit"
+            eleveId={eleve.id}
+            defaultValues={selectedEval}
+            onSubmit={async (data) => {
+              await updateEvaluation.mutateAsync({ id: selectedEval.id, data })
+              setShowEditEval(false); setSelectedEval(null)
+            }}
+            onCancel={() => { setShowEditEval(false); setSelectedEval(null) }}
+            isLoading={updateEvaluation.isPending}
+          />
+        )}
+      </Modal>
+
+      {/* Modal supprimer évaluation */}
+      <Modal open={showDeleteEval && !!selectedEval} onClose={() => { setShowDeleteEval(false); setSelectedEval(null) }} title="Supprimer l'évaluation" size="sm">
+        <p className="text-sm text-[#64748B] mb-4">
+          Supprimer l'évaluation du <strong>{selectedEval ? formatDate(selectedEval.created_at) : ''}</strong> ? Cette action est irréversible.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => { setShowDeleteEval(false); setSelectedEval(null) }}>Annuler</Button>
+          <Button variant="destructive" disabled={deleteEvaluation.isPending} onClick={async () => {
+            await deleteEvaluation.mutateAsync(selectedEval!.id)
+            setShowDeleteEval(false); setSelectedEval(null)
+          }}>
+            {deleteEvaluation.isPending ? 'Suppression...' : 'Supprimer'}
+          </Button>
+        </div>
       </Modal>
     </div>
   )
@@ -418,15 +464,31 @@ const COMPETENCES_LABELS: Record<string, string> = {
   independance: 'Autonomie',
 }
 
-function EvaluationCard({ evaluation }: { evaluation: Evaluation }) {
+function EvaluationCard({ evaluation, onEdit, onDelete }: {
+  evaluation: Evaluation
+  onEdit?: () => void
+  onDelete?: () => void
+}) {
   const entries = Object.entries(evaluation.competences) as [string, number][]
   return (
     <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs text-[#64748B]">{formatDate(evaluation.created_at, 'dd/MM/yyyy')}</p>
-        <div className="flex items-center gap-1">
-          <Star className="w-3.5 h-3.5 text-[#D97706] fill-[#D97706]" />
-          <span className="text-sm font-bold text-[#0F172A]">{evaluation.note_globale}/5</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <Star className="w-3.5 h-3.5 text-[#D97706] fill-[#D97706]" />
+            <span className="text-sm font-bold text-[#0F172A]">{evaluation.note_globale}/5</span>
+          </div>
+          {onEdit && (
+            <button onClick={onEdit} className="text-xs text-[#2563EB] hover:underline px-1.5 py-0.5 rounded hover:bg-[#EFF6FF] transition-colors">
+              Modifier
+            </button>
+          )}
+          {onDelete && (
+            <button onClick={onDelete} className="text-xs text-[#DC2626] hover:underline px-1.5 py-0.5 rounded hover:bg-[#FEF2F2] transition-colors">
+              Supprimer
+            </button>
+          )}
         </div>
       </div>
       <div className="space-y-2">

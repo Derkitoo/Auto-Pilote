@@ -1,7 +1,7 @@
 import { useForm, useWatch } from 'react-hook-form'
 import { formatDate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import type { Lecon, CompetencesEvaluation } from '@/types'
+import type { Evaluation, Lecon, CompetencesEvaluation } from '@/types'
 
 const COMPETENCES: { key: keyof CompetencesEvaluation; label: string }[] = [
   { key: 'maitrise_vehicule',        label: 'Maîtrise du véhicule' },
@@ -21,9 +21,12 @@ interface FormValues {
   commentaire: string
 }
 
-interface Props {
+// Mode création
+interface CreateProps {
+  mode?: 'create'
   eleveId: string
   lecons: Lecon[]
+  defaultValues?: never
   onSubmit: (data: {
     lecon_id: string
     eleve_id: string
@@ -36,22 +39,37 @@ interface Props {
   isLoading: boolean
 }
 
-export function EvaluationForm({ eleveId, lecons, onSubmit, onCancel, isLoading }: Props) {
+// Mode édition
+interface EditProps {
+  mode: 'edit'
+  eleveId: string
+  lecons?: never
+  defaultValues: Evaluation
+  onSubmit: (data: {
+    competences: CompetencesEvaluation
+    note_globale: number
+    commentaire: string | null
+  }) => Promise<void>
+  onCancel: () => void
+  isLoading: boolean
+}
+
+type Props = CreateProps | EditProps
+
+export function EvaluationForm({ mode = 'create', eleveId, lecons, defaultValues, onSubmit, onCancel, isLoading }: Props) {
   const { register, handleSubmit, control } = useForm<FormValues>({
     defaultValues: {
-      lecon_id: lecons[0]?.id ?? '',
-      maitrise_vehicule: 3,
-      comportement_circulation: 3,
-      respect_regles: 3,
-      communication: 3,
-      independance: 3,
-      commentaire: '',
+      lecon_id: (lecons as Lecon[] | undefined)?.[0]?.id ?? '',
+      maitrise_vehicule: defaultValues?.competences.maitrise_vehicule ?? 3,
+      comportement_circulation: defaultValues?.competences.comportement_circulation ?? 3,
+      respect_regles: defaultValues?.competences.respect_regles ?? 3,
+      communication: defaultValues?.competences.communication ?? 3,
+      independance: defaultValues?.competences.independance ?? 3,
+      commentaire: defaultValues?.commentaire ?? '',
     },
   })
 
   const values = useWatch({ control })
-  const leconId = values.lecon_id
-  const selectedLecon = lecons.find(l => l.id === leconId)
 
   const scores = [
     Number(values.maitrise_vehicule),
@@ -62,25 +80,36 @@ export function EvaluationForm({ eleveId, lecons, onSubmit, onCancel, isLoading 
   ]
   const noteGlobale = Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10
 
+  const selectedLecon = mode === 'create'
+    ? (lecons as Lecon[]).find(l => l.id === values.lecon_id)
+    : null
+
   const submit = handleSubmit(async (data) => {
-    if (!selectedLecon) return
-    await onSubmit({
-      lecon_id: data.lecon_id,
-      eleve_id: eleveId,
-      moniteur_id: selectedLecon.moniteur_id,
-      competences: {
-        maitrise_vehicule: Number(data.maitrise_vehicule),
-        comportement_circulation: Number(data.comportement_circulation),
-        respect_regles: Number(data.respect_regles),
-        communication: Number(data.communication),
-        independance: Number(data.independance),
-      },
-      note_globale: noteGlobale,
-      commentaire: data.commentaire?.trim() || null,
-    })
+    const competences: CompetencesEvaluation = {
+      maitrise_vehicule: Number(data.maitrise_vehicule),
+      comportement_circulation: Number(data.comportement_circulation),
+      respect_regles: Number(data.respect_regles),
+      communication: Number(data.communication),
+      independance: Number(data.independance),
+    }
+    const commentaire = data.commentaire?.trim() || null
+
+    if (mode === 'edit') {
+      await (onSubmit as EditProps['onSubmit'])({ competences, note_globale: noteGlobale, commentaire })
+    } else {
+      if (!selectedLecon) return
+      await (onSubmit as CreateProps['onSubmit'])({
+        lecon_id: data.lecon_id,
+        eleve_id: eleveId,
+        moniteur_id: selectedLecon.moniteur_id,
+        competences,
+        note_globale: noteGlobale,
+        commentaire,
+      })
+    }
   })
 
-  if (lecons.length === 0) {
+  if (mode === 'create' && (lecons as Lecon[]).length === 0) {
     return (
       <div className="py-6 text-center text-sm text-[#64748B]">
         Aucune leçon effectuée disponible pour évaluer.
@@ -90,21 +119,23 @@ export function EvaluationForm({ eleveId, lecons, onSubmit, onCancel, isLoading 
 
   return (
     <form onSubmit={submit} className="space-y-5">
-      {/* Leçon */}
-      <div>
-        <label className="block text-sm font-medium text-[#0F172A] mb-1.5">Leçon à évaluer</label>
-        <select
-          {...register('lecon_id')}
-          className="w-full h-9 px-3 text-sm border border-[#E2E8F0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
-        >
-          {lecons.map(l => (
-            <option key={l.id} value={l.id}>
-              {formatDate(l.date_debut, "dd/MM/yyyy 'à' HH:mm")} — {l.type.replace(/_/g, ' ')}
-              {l.moniteur ? ` (${l.moniteur.prenom} ${l.moniteur.nom})` : ''}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* Leçon (création uniquement) */}
+      {mode === 'create' && (
+        <div>
+          <label className="block text-sm font-medium text-[#0F172A] mb-1.5">Leçon à évaluer</label>
+          <select
+            {...register('lecon_id')}
+            className="w-full h-9 px-3 text-sm border border-[#E2E8F0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+          >
+            {(lecons as Lecon[]).map(l => (
+              <option key={l.id} value={l.id}>
+                {formatDate(l.date_debut, "dd/MM/yyyy 'à' HH:mm")} — {l.type.replace(/_/g, ' ')}
+                {l.moniteur ? ` (${l.moniteur.prenom} ${l.moniteur.nom})` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Compétences */}
       <div className="space-y-4">
@@ -152,8 +183,8 @@ export function EvaluationForm({ eleveId, lecons, onSubmit, onCancel, isLoading 
 
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="outline" onClick={onCancel}>Annuler</Button>
-        <Button type="submit" disabled={isLoading || !selectedLecon}>
-          {isLoading ? 'Enregistrement...' : 'Enregistrer'}
+        <Button type="submit" disabled={isLoading || (mode === 'create' && !selectedLecon)}>
+          {isLoading ? 'Enregistrement...' : mode === 'edit' ? 'Mettre à jour' : 'Enregistrer'}
         </Button>
       </div>
     </form>
