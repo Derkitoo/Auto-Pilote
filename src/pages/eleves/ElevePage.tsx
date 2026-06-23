@@ -142,12 +142,12 @@ export function ElevePage() {
       </div>
 
       {/* Onglets */}
-      <div className="flex gap-1 bg-[#F8FAFC] p-1 rounded-xl border border-[#E2E8F0]">
+      <div className="flex gap-1 bg-[#F8FAFC] p-1 rounded-xl border border-[#E2E8F0] overflow-x-auto">
         {ONGLETS.map(o => (
           <button
             key={o.value}
             onClick={() => setOnglet(o.value)}
-            className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+            className={`shrink-0 px-4 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
               onglet === o.value
                 ? 'bg-white text-[#0F172A] shadow-sm'
                 : 'text-[#64748B] hover:text-[#0F172A]'
