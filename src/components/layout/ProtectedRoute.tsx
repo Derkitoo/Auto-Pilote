@@ -1,7 +1,14 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 
-export function ProtectedRoute({ children }: { children?: React.ReactNode }) {
+type Role = 'gerant' | 'moniteur' | 'secretaire' | 'eleve'
+
+interface ProtectedRouteProps {
+  children?: React.ReactNode
+  allowedRoles?: Role[]
+}
+
+export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth()
 
   if (isLoading) {
@@ -13,6 +20,11 @@ export function ProtectedRoute({ children }: { children?: React.ReactNode }) {
   }
 
   if (!user) return <Navigate to="/login" replace />
+
+  // Si un rôle requis est spécifié et que l'utilisateur ne l'a pas, rediriger vers son espace
+  if (allowedRoles && !allowedRoles.includes(user.role as Role)) {
+    return <Navigate to={user.role === 'eleve' ? '/eleve/accueil' : '/dashboard'} replace />
+  }
 
   return children ? <>{children}</> : <Outlet />
 }

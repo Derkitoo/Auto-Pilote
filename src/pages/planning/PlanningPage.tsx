@@ -7,6 +7,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css'
 
 import { useLecons, useCreateLecon, useUpdateLecon, useDeleteLecon } from '@/hooks/useLecons'
 import { useMoniteurs } from '@/hooks/useMoniteurs'
+import { useAuth } from '@/contexts/AuthContext'
 import { LeconForm } from '@/components/planning/LeconForm'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
@@ -90,7 +91,10 @@ const VUES: { value: CalendarView; label: string }[] = [
 ]
 
 export function PlanningPage() {
-  const { data: lecons, isLoading } = useLecons()
+  const { user } = useAuth()
+  const isMoniteur = user?.role === 'moniteur'
+  // Moniteur ne voit que ses propres leçons
+  const { data: lecons, isLoading } = useLecons(isMoniteur && user.moniteur_id ? { moniteur_id: user.moniteur_id } : undefined)
   const { data: moniteurs } = useMoniteurs()
   const createLecon = useCreateLecon()
   const updateLecon = useUpdateLecon()
@@ -222,8 +226,8 @@ export function PlanningPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Filtres moniteurs */}
-          {moniteurs && (
+          {/* Filtres moniteurs — masqués si connecté en tant que moniteur */}
+          {!isMoniteur && moniteurs && (
             <div className="flex items-center gap-1.5">
               {moniteurs.map(m => (
                 <button
@@ -264,10 +268,12 @@ export function PlanningPage() {
             ))}
           </div>
 
-          <Button onClick={() => setShowCreate(true)}>
-            <Plus className="w-4 h-4" />
-            Nouvelle leçon
-          </Button>
+          {!isMoniteur && (
+            <Button onClick={() => setShowCreate(true)}>
+              <Plus className="w-4 h-4" />
+              Nouvelle leçon
+            </Button>
+          )}
         </div>
       </div>
 

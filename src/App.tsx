@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
@@ -14,6 +15,11 @@ import { VehiculesPage } from '@/pages/vehicules/VehiculesPage'
 import { SettingsPage } from '@/pages/settings/SettingsPage'
 import { FacturationPage } from '@/pages/facturation/FacturationPage'
 import { ExamensPage } from '@/pages/examens/ExamensPage'
+import { EleveLayout } from '@/components/layout/EleveLayout'
+import { EleveAccueilPage } from '@/pages/eleve-space/EleveAccueilPage'
+import { ElevePlanningPage } from '@/pages/eleve-space/ElevePlanningPage'
+import { EleveExamensPage } from '@/pages/eleve-space/EleveExamensPage'
+import { EleveFacturesPage } from '@/pages/eleve-space/EleveFacturesPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,19 +34,30 @@ function App() {
         <HashRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            {/* Routes protégées — redirige vers /login si non connecté */}
-            <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<RootRedirect />} />
+
+            {/* Espace gérant / moniteur */}
+            <Route element={<ProtectedRoute allowedRoles={['gerant', 'moniteur', 'secretaire']} />}>
               <Route element={<Layout />}>
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/eleves" element={<ElevesPage />} />
-                <Route path="/eleves/:id" element={<ElevePage />} />
-                <Route path="/planning" element={<PlanningPage />} />
-                <Route path="/moniteurs" element={<MoniteursPage />} />
-                <Route path="/vehicules" element={<VehiculesPage />} />
+                <Route path="/dashboard"   element={<DashboardPage />} />
+                <Route path="/eleves"      element={<ElevesPage />} />
+                <Route path="/eleves/:id"  element={<ElevePage />} />
+                <Route path="/planning"    element={<PlanningPage />} />
+                <Route path="/moniteurs"   element={<MoniteursPage />} />
+                <Route path="/vehicules"   element={<VehiculesPage />} />
                 <Route path="/facturation" element={<FacturationPage />} />
-                <Route path="/examens" element={<ExamensPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/examens"     element={<ExamensPage />} />
+                <Route path="/settings"    element={<SettingsPage />} />
+              </Route>
+            </Route>
+
+            {/* Espace élève */}
+            <Route element={<ProtectedRoute allowedRoles={['eleve']} />}>
+              <Route element={<EleveLayout />}>
+                <Route path="/eleve/accueil"  element={<EleveAccueilPage />} />
+                <Route path="/eleve/planning" element={<ElevePlanningPage />} />
+                <Route path="/eleve/examens"  element={<EleveExamensPage />} />
+                <Route path="/eleve/factures" element={<EleveFacturesPage />} />
               </Route>
             </Route>
           </Routes>
@@ -49,6 +66,12 @@ function App() {
       </AuthProvider>
     </QueryClientProvider>
   )
+}
+
+function RootRedirect() {
+  const { user } = useAuth()
+  if (!user) return <Navigate to="/login" replace />
+  return <Navigate to={user.role === 'eleve' ? '/eleve/accueil' : '/dashboard'} replace />
 }
 
 export default App

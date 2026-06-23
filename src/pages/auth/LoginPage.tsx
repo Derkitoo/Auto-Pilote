@@ -29,8 +29,8 @@ export function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      await login(email, password)
-      navigate('/dashboard', { replace: true })
+      const user = await login(email, password)
+      navigate(user.role === 'eleve' ? '/eleve/accueil' : '/dashboard', { replace: true })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur de connexion')
     } finally {
@@ -103,16 +103,18 @@ export function LoginPage() {
           {/* Comptes demo */}
           <div className="mt-5 pt-4 border-t border-[#E2E8F0]">
             <p className="text-xs text-[#64748B] mb-2 font-medium">Comptes de démonstration :</p>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {[
-                { email: 'gerant@ae-liberte.fr', role: 'Gérant' },
-                { email: 'thomas@ae-liberte.fr', role: 'Moniteur' },
+                { email: 'gerant@ae-liberte.fr',   role: 'Gérant',   color: '#2563EB' },
+                { email: 'thomas@ae-liberte.fr',   role: 'Moniteur', color: '#16A34A' },
+                { email: 'lucas.martin@gmail.com', role: 'Élève',    color: '#D97706' },
               ].map(c => (
-                <div key={c.email} className="flex items-center justify-between text-xs">
+                <div key={c.email} className="flex items-center justify-between text-xs bg-[#F8FAFC] rounded-lg px-2 py-1.5">
                   <span className="text-[#64748B]">{c.email}</span>
-                  <span className="text-[#94A3B8]">{c.role} — demo1234</span>
+                  <span className="font-medium px-1.5 py-0.5 rounded-full text-white text-[10px]" style={{ backgroundColor: c.color }}>{c.role}</span>
                 </div>
               ))}
+              <p className="text-center text-[10px] text-[#94A3B8] pt-1">Mot de passe : <strong>demo1234</strong></p>
             </div>
           </div>
         </div>

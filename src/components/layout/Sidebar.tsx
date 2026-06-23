@@ -13,19 +13,25 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 
-const navItems = [
-  { to: '/dashboard',   icon: LayoutDashboard, label: 'Tableau de bord' },
-  { to: '/eleves',      icon: Users,           label: 'Élèves' },
-  { to: '/planning',    icon: CalendarDays,    label: 'Planning' },
-  { to: '/moniteurs',   icon: UserCheck,       label: 'Moniteurs' },
-  { to: '/vehicules',   icon: Car,             label: 'Véhicules' },
-  { to: '/facturation', icon: Receipt,         label: 'Facturation' },
-  { to: '/examens',     icon: Award,           label: 'Examens' },
+type Role = 'gerant' | 'moniteur' | 'secretaire' | 'eleve'
+
+const navItems: { to: string; icon: React.ElementType; label: string; roles: Role[] }[] = [
+  { to: '/dashboard',   icon: LayoutDashboard, label: 'Tableau de bord', roles: ['gerant', 'moniteur', 'secretaire'] },
+  { to: '/eleves',      icon: Users,           label: 'Élèves',          roles: ['gerant', 'moniteur', 'secretaire'] },
+  { to: '/planning',    icon: CalendarDays,    label: 'Planning',        roles: ['gerant', 'moniteur', 'secretaire'] },
+  { to: '/moniteurs',   icon: UserCheck,       label: 'Moniteurs',       roles: ['gerant', 'secretaire'] },
+  { to: '/vehicules',   icon: Car,             label: 'Véhicules',       roles: ['gerant', 'secretaire'] },
+  { to: '/facturation', icon: Receipt,         label: 'Facturation',     roles: ['gerant', 'secretaire'] },
+  { to: '/examens',     icon: Award,           label: 'Examens',         roles: ['gerant', 'moniteur', 'secretaire'] },
 ]
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
+  const { user } = useAuth()
+  const role = user?.role ?? 'gerant'
+  const visibleItems = navItems.filter(item => item.roles.includes(role as Role))
 
   return (
     <aside
@@ -46,7 +52,7 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 p-2 space-y-0.5">
-        {navItems.map(({ to, icon: Icon, label }) => (
+        {visibleItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
