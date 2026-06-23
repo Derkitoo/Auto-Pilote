@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Input } from '@/components/ui/input'
@@ -38,7 +38,7 @@ interface ExamenFormProps {
 }
 
 export function ExamenForm({ defaultValues, elevesOptions, onSubmit, onCancel, isLoading }: ExamenFormProps) {
-  const { register, handleSubmit, formState: { errors } } = useForm<ExamenFormValues>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<ExamenFormValues>({
     resolver: zodResolver(examenSchema),
     defaultValues: {
       eleve_id: defaultValues?.eleve_id ?? '',
@@ -51,11 +51,16 @@ export function ExamenForm({ defaultValues, elevesOptions, onSubmit, onCancel, i
     },
   })
 
+  const typeSelectionne = useWatch({ control, name: 'type' })
+  const isCode = typeSelectionne === 'code'
+
   const handleFormSubmit = (data: ExamenFormValues) => {
     onSubmit({
       ...data,
       lieu: data.lieu || null,
       resultat: data.resultat || null,
+      // On efface le score si ce n'est pas un examen de code
+      score: isCode ? (data.score ?? null) : null,
       notes: data.notes || null,
     })
   }
@@ -69,12 +74,32 @@ export function ExamenForm({ defaultValues, elevesOptions, onSubmit, onCancel, i
 
       <div className="grid grid-cols-2 gap-3">
         <Input id="date_examen" label="Date *" type="date" error={errors.date_examen?.message} {...register('date_examen')} />
-        <Input id="lieu" label="Lieu" placeholder="Centre ETG Lyon" {...register('lieu')} />
+        <Input id="lieu" label="Lieu" placeholder={isCode ? 'Centre ETG Lyon' : 'BSSER / Préfecture...'} {...register('lieu')} />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Select id="resultat" label="Résultat" options={RESULTATS} {...register('resultat')} />
-        <Input id="score" label="Score (/40)" type="number" min={0} max={40} {...register('score', { valueAsNumber: true, setValueAs: v => v === '' || isNaN(v) ? null : Number(v) })} />
+        {isCode ? (
+          <div className="flex flex-col gap-1.5">
+            <Input
+              id="score"
+              label="Score (/40)"
+              type="number"
+              min={0}
+              max={40}
+              {...register('score', { valueAsNumber: true, setValueAs: v => v === '' || isNaN(v) ? null : Number(v) })}
+            />
+            {/* Indicateur seuil 35/40 */}
+            <p className="text-[10px] text-[#94A3B8]">Seuil de réussite : 35/40</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-[#64748B]">Score</label>
+            <div className="h-9 px-3 flex items-center text-sm text-[#94A3B8] border border-[#E2E8F0] rounded-lg bg-[#F8FAFC]">
+              Non applicable (conduite)
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-1.5">
