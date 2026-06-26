@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { StatutBadge } from '@/components/eleves/StatutBadge'
 import { EleveForm } from '@/components/eleves/EleveForm'
 import { EvaluationForm } from '@/components/evaluations/EvaluationForm'
+import { LivretTab } from '@/components/livret/LivretTab'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
@@ -21,14 +22,15 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate, formatMontant } from '@/lib/utils'
 import type { StatutLecon, ResultatExamen, StatutFacture, Evaluation } from '@/types'
 
-type Onglet = 'infos' | 'lecons' | 'examens' | 'factures' | 'evaluations'
+type Onglet = 'infos' | 'lecons' | 'examens' | 'factures' | 'evaluations' | 'livret'
 
 const ONGLETS: { value: Onglet; label: string }[] = [
-  { value: 'infos', label: 'Informations' },
-  { value: 'lecons', label: 'Leçons' },
-  { value: 'examens', label: 'Examens' },
-  { value: 'factures', label: 'Factures' },
+  { value: 'infos',       label: 'Informations' },
+  { value: 'lecons',      label: 'Leçons' },
+  { value: 'examens',     label: 'Examens' },
+  { value: 'factures',    label: 'Factures' },
   { value: 'evaluations', label: 'Évaluations' },
+  { value: 'livret',      label: '📋 Livret' },
 ]
 
 export function ElevePage() {
@@ -85,6 +87,8 @@ export function ElevePage() {
   const totalHeures = eleve.heures_effectuees + eleve.solde_heures
   const progression = totalHeures > 0 ? Math.round((eleve.heures_effectuees / totalHeures) * 100) : 0
   const leconsEffectuees = lecons?.filter(l => l.statut === 'effectuee') ?? []
+  const leconsAnnulees = lecons?.filter(l => ['annulee_eleve', 'annulee_moniteur', 'no_show'].includes(l.statut)) ?? []
+  const soldeAlerte = eleve.solde_heures === 0 ? 'epuise' : eleve.solde_heures <= 2 ? 'faible' : null
 
   return (
     <div className="space-y-5 max-w-4xl">
@@ -111,6 +115,20 @@ export function ElevePage() {
           )}
         </div>
       </div>
+
+      {/* Alerte solde */}
+      {soldeAlerte === 'epuise' && (
+        <div className="flex items-center gap-2.5 p-3.5 bg-[#FEE2E2] border border-[#FCA5A5] rounded-xl text-sm text-[#DC2626] font-medium">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>Solde épuisé — impossible de planifier de nouvelles leçons sans renouvellement</span>
+        </div>
+      )}
+      {soldeAlerte === 'faible' && (
+        <div className="flex items-center gap-2.5 p-3.5 bg-[#FEF3C7] border border-[#FCD34D] rounded-xl text-sm text-[#D97706] font-medium">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>Solde faible — {eleve.solde_heures}h restante{eleve.solde_heures > 1 ? 's' : ''}, renouvellement conseillé</span>
+        </div>
+      )}
 
       {/* Header card */}
       <div className="bg-white rounded-xl border border-[#E2E8F0] p-5">
@@ -175,11 +193,22 @@ export function ElevePage() {
               </div>
               <p className="text-xs text-[#64748B] mt-1">{progression}% du forfait ({totalHeures}h)</p>
             </div>
-            <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
-              <p className="text-xs text-[#64748B] mb-1">Heures restantes</p>
-              <p className="text-2xl font-semibold text-[#0F172A]">{eleve.solde_heures}h</p>
+            <div className={`rounded-xl border p-4 ${
+              eleve.solde_heures === 0
+                ? 'bg-[#FEF2F2] border-[#FCA5A5]'
+                : eleve.solde_heures <= 2
+                ? 'bg-[#FFFBEB] border-[#FCD34D]'
+                : 'bg-white border-[#E2E8F0]'
+            }`}>
+              <p className="text-xs text-[#64748B] mb-1 flex items-center gap-1.5">
+                Heures restantes
+                {soldeAlerte && <AlertTriangle className={`w-3 h-3 ${soldeAlerte === 'epuise' ? 'text-[#DC2626]' : 'text-[#D97706]'}`} />}
+              </p>
+              <p className={`text-2xl font-semibold ${
+                eleve.solde_heures === 0 ? 'text-[#DC2626]' : eleve.solde_heures <= 2 ? 'text-[#D97706]' : 'text-[#0F172A]'
+              }`}>{eleve.solde_heures}h</p>
               <p className="text-xs text-[#64748B] mt-1">
-                {eleve.solde_heures <= 2 ? 'Renouvellement conseillé' : 'Solde suffisant'}
+                {eleve.solde_heures === 0 ? 'Solde épuisé' : eleve.solde_heures <= 2 ? 'Renouvellement conseillé' : 'Solde suffisant'}
               </p>
             </div>
             <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
@@ -224,10 +253,18 @@ export function ElevePage() {
       {/* ── Tab : Leçons ─────────────────────────────────────────────────────── */}
       {onglet === 'lecons' && (
         <div className="bg-white rounded-xl border border-[#E2E8F0]">
-          <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[#E2E8F0] bg-[#F8FAFC]">
+          <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[#E2E8F0] bg-[#F8FAFC] flex-wrap gap-y-2">
             <CalendarDays className="w-4 h-4 text-[#64748B]" />
             <h3 className="text-sm font-semibold text-[#0F172A]">Historique des leçons</h3>
-            <span className="ml-auto text-xs text-[#94A3B8]">{lecons?.length ?? 0} leçon{(lecons?.length ?? 0) > 1 ? 's' : ''}</span>
+            <div className="ml-auto flex items-center gap-3">
+              <span className="text-xs text-[#94A3B8]">{leconsEffectuees.length} effectuée{leconsEffectuees.length > 1 ? 's' : ''}</span>
+              {leconsAnnulees.length > 0 && (
+                <span className="flex items-center gap-1 text-xs text-[#DC2626] bg-[#FEE2E2] px-2 py-0.5 rounded-full font-medium">
+                  <AlertTriangle className="w-3 h-3" />
+                  {leconsAnnulees.length} absence{leconsAnnulees.length > 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
           </div>
           {leconsLoading ? (
             <div className="p-4 space-y-2">
@@ -362,6 +399,10 @@ export function ElevePage() {
             </div>
           )}
         </div>
+      )}
+
+      {onglet === 'livret' && (
+        <LivretTab eleve_id={eleve.id} />
       )}
 
       {/* Modal édition */}

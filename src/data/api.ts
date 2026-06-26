@@ -13,6 +13,9 @@ import type {
   Evaluation,
   Facture,
   Examen,
+  Livret,
+  EntreeLivret,
+  NiveauCompetence,
   CreateEleveInput,
   UpdateEleveInput,
   CreateLeconInput,
@@ -30,6 +33,7 @@ import {
   mockEvaluations,
   mockFactures,
   mockExamens,
+  mockLivrets,
 } from './mock'
 
 // État mutable en mémoire (simule la base de données)
@@ -41,6 +45,7 @@ let _lecons: Lecon[] = [...mockLecons]
 let _evaluations: Evaluation[] = [...mockEvaluations]
 let _factures: Facture[] = [...mockFactures]
 let _examens: Examen[] = [...mockExamens]
+let _livrets: Livret[] = mockLivrets.map(l => ({ ...l, entries: [...l.entries] }))
 
 const delay = (ms = 300) => new Promise(r => setTimeout(r, ms))
 const uid = () => crypto.randomUUID()
@@ -210,9 +215,21 @@ export async function createLecon(data: CreateLeconInput): Promise<Lecon> {
 
 export async function updateLecon(id: string, data: UpdateLeconInput): Promise<Lecon> {
   await delay()
+  const prev = _lecons.find(l => l.id === id)
   _lecons = _lecons.map(l =>
     l.id === id ? { ...l, ...data, updated_at: now() } : l
   )
+  // Déduire heures du solde élève quand passage à "effectuee"
+  if (data.statut === 'effectuee' && prev && prev.statut !== 'effectuee') {
+    const dureeH = Math.max(1, Math.round(
+      (new Date(prev.date_fin).getTime() - new Date(prev.date_debut).getTime()) / 3600000
+    ))
+    _eleves = _eleves.map(e =>
+      e.id === prev.eleve_id
+        ? { ...e, solde_heures: Math.max(0, e.solde_heures - dureeH), heures_effectuees: e.heures_effectuees + dureeH, updated_at: now() }
+        : e
+    )
+  }
   return fetchLecon(id)
 }
 
@@ -344,4 +361,40 @@ export async function fetchStatsDashboard() {
     facturesEnAttente,
     prochaines_lecons: leconsAujourdhui,
   }
+}
+
+// ─── Livret pédagogique ──────────────────────────────────────────────────────
+
+export async function fetchLivret(eleve_id: string): Promise<Livret> {
+  await delay()
+  let livret = _livrets.find(l => l.eleve_id === eleve_id)
+  if (!livret) {
+    livret = { id: uid(), eleve_id, entries: [], created_at: now(), updated_at: now() }
+    _livrets.push(livret)
+  }
+  return { ...livret, entries: [...livret.entries] }
+}
+
+export async function upsertLivretEntry(
+  eleve_id: string,
+  competence_id: number,
+  niveau: NiveauCompetence,
+  commentaire: string | null,
+  moniteur_id: string,
+): Promise<Livret> {
+  await delay(150)
+  let livret = _livrets.find(l => l.eleve_id === eleve_id)
+  if (!livret) {
+    livret = { id: uid(), eleve_id, entries: [], created_at: now(), updated_at: now() }
+    _livrets.push(livret)
+  }
+  const existing = livret.entries.findIndex(e => e.competence_id === competence_id)
+  const entry: EntreeLivret = { competence_id, niveau, commentaire, date_maj: now(), moniteur_id }
+  if (existing >= 0) {
+    livret.entries[existing] = entry
+  } else {
+    livret.entries.push(entry)
+  }
+  livret.updated_at = now()
+  return { ...livret, entries: [...livret.entries] }
 }

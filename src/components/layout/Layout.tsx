@@ -5,7 +5,7 @@ import { BottomNav } from './BottomNav'
 
 export function Layout() {
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
+    <div className="flex h-screen overflow-hidden bg-[#F8FAFC] dark:bg-slate-950">
       {/* Sidebar — desktop uniquement */}
       <div className="hidden md:flex">
         <Sidebar />

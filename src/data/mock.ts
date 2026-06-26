@@ -7,6 +7,7 @@ import type {
   Evaluation,
   Facture,
   Examen,
+  Livret,
 } from '@/types'
 
 // ─── Auto-école ──────────────────────────────────────────────────────────────
@@ -592,3 +593,61 @@ export const mockExamens: Examen[] = [
     eleve: { id: 'elv-002', prenom: 'Emma', nom: 'Leroy' },
   },
 ]
+
+// ─── Livrets pédagogiques ─────────────────────────────────────────────────────
+
+export const mockLivrets: Livret[] = [
+  {
+    id: 'liv-001',
+    eleve_id: 'elv-001',
+    entries: [
+      { competence_id: 1,  niveau: 4, commentaire: null, date_maj: '2025-01-10T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 2,  niveau: 3, commentaire: null, date_maj: '2025-01-10T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 3,  niveau: 4, commentaire: 'Vérifications bien assimilées', date_maj: '2025-01-15T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 4,  niveau: 5, commentaire: null, date_maj: '2025-01-15T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 5,  niveau: 3, commentaire: null, date_maj: '2025-01-20T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 6,  niveau: 2, commentaire: 'À retravailler en virages serrés', date_maj: '2025-01-20T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 8,  niveau: 2, commentaire: 'Créneau difficile', date_maj: '2025-02-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 9,  niveau: 3, commentaire: null, date_maj: '2025-02-05T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 10, niveau: 3, commentaire: null, date_maj: '2025-02-05T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 11, niveau: 2, commentaire: null, date_maj: '2025-02-10T10:00:00Z', moniteur_id: 'mon-001' },
+    ],
+    created_at: '2025-01-10T10:00:00Z',
+    updated_at: '2025-02-10T10:00:00Z',
+  },
+  {
+    id: 'liv-002',
+    eleve_id: 'elv-002',
+    entries: [
+      { competence_id: 1,  niveau: 5, commentaire: null, date_maj: '2024-05-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 2,  niveau: 5, commentaire: null, date_maj: '2024-05-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 3,  niveau: 5, commentaire: null, date_maj: '2024-05-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 4,  niveau: 5, commentaire: null, date_maj: '2024-05-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 5,  niveau: 5, commentaire: null, date_maj: '2024-05-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 6,  niveau: 5, commentaire: null, date_maj: '2024-06-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 7,  niveau: 4, commentaire: null, date_maj: '2024-06-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 8,  niveau: 5, commentaire: 'Manœuvres excellentes', date_maj: '2024-06-15T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 9,  niveau: 5, commentaire: null, date_maj: '2024-07-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 10, niveau: 5, commentaire: null, date_maj: '2024-07-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 11, niveau: 5, commentaire: null, date_maj: '2024-07-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 12, niveau: 4, commentaire: null, date_maj: '2024-07-15T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 13, niveau: 5, commentaire: null, date_maj: '2024-08-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 14, niveau: 4, commentaire: null, date_maj: '2024-08-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 15, niveau: 4, commentaire: null, date_maj: '2024-08-15T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 18, niveau: 5, commentaire: null, date_maj: '2024-09-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 19, niveau: 4, commentaire: null, date_maj: '2024-09-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 20, niveau: 5, commentaire: null, date_maj: '2024-09-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 21, niveau: 5, commentaire: null, date_maj: '2024-09-15T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 22, niveau: 4, commentaire: null, date_maj: '2024-09-15T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 27, niveau: 5, commentaire: null, date_maj: '2024-10-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 28, niveau: 5, commentaire: null, date_maj: '2024-10-01T10:00:00Z', moniteur_id: 'mon-001' },
+      { competence_id: 29, niveau: 5, commentaire: null, date_maj: '2024-10-01T10:00:00Z', moniteur_id: 'mon-001' },
+    ],
+    created_at: '2024-05-01T10:00:00Z',
+    updated_at: '2024-10-01T10:00:00Z',
+  },
+  { id: 'liv-003', eleve_id: 'elv-003', entries: [], created_at: '2025-01-10T10:00:00Z', updated_at: '2025-01-10T10:00:00Z' },
+  { id: 'liv-004', eleve_id: 'elv-004', entries: [], created_at: '2024-11-01T10:00:00Z', updated_at: '2024-11-01T10:00:00Z' },
+  { id: 'liv-005', eleve_id: 'elv-005', entries: [], created_at: '2024-01-20T10:00:00Z', updated_at: '2024-01-20T10:00:00Z' },
+]
+

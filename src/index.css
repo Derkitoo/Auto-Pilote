@@ -2,6 +2,9 @@
 
 @import "tailwindcss";
 
+/* Class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary: #2563EB;
   --color-primary-dark: #1D4ED8;
@@ -20,6 +23,15 @@
   --radius-lg: 12px;
 }
 
+/* Dark mode — overrides semantic color variables */
+:root.dark {
+  --color-background: #0F172A;
+  --color-surface: #1E293B;
+  --color-border: #334155;
+  --color-text-primary: #F1F5F9;
+  --color-text-secondary: #94A3B8;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -30,6 +42,7 @@ body {
   background-color: var(--color-background);
   color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 /* ── react-big-calendar overrides ────────────────────────────────────────── */

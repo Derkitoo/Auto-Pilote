@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, Users, BookOpen, Trophy, Clock } from 'lucide-react'
+import { Plus, Search, Users, BookOpen, Trophy, Clock, AlertTriangle } from 'lucide-react'
 import { useEleves, useCreateEleve } from '@/hooks/useEleves'
 import { StatutBadge } from '@/components/eleves/StatutBadge'
 import { EleveForm } from '@/components/eleves/EleveForm'
@@ -50,6 +50,7 @@ export function ElevesPage() {
       enFormation: eleves.filter(e => e.statut === 'en_formation').length,
       examens: eleves.filter(e => e.statut === 'examen_code' || e.statut === 'examen_conduite').length,
       diplomes: eleves.filter(e => e.statut === 'diplome').length,
+      soldeFaible: eleves.filter(e => e.solde_heures <= 2).length,
     }
   }, [eleves])
 
@@ -57,9 +58,9 @@ export function ElevesPage() {
     <div className="space-y-6">
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
         {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
+          Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-xl" />
           ))
         ) : stats ? (
@@ -68,6 +69,7 @@ export function ElevesPage() {
             <StatCard icon={<BookOpen className="w-5 h-5 text-[#2563EB]" />} label="En formation" value={stats.enFormation} color="blue" />
             <StatCard icon={<Clock className="w-5 h-5 text-[#D97706]" />} label="En examen" value={stats.examens} color="orange" />
             <StatCard icon={<Trophy className="w-5 h-5 text-[#16A34A]" />} label="Diplômés" value={stats.diplomes} color="green" />
+            <StatCard icon={<AlertTriangle className="w-5 h-5 text-[#DC2626]" />} label="Solde faible" value={stats.soldeFaible} color="red" />
           </>
         ) : null}
       </div>
@@ -165,13 +167,19 @@ export function ElevesPage() {
                     <div className="flex items-center gap-2">
                       <div className="w-16 h-1.5 bg-[#E2E8F0] rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-[#2563EB] rounded-full"
+                          className="h-full rounded-full"
                           style={{
-                            width: `${Math.min(100, (eleve.heures_effectuees / (eleve.heures_effectuees + eleve.solde_heures || 1)) * 100)}%`
+                            width: `${Math.min(100, (eleve.heures_effectuees / (eleve.heures_effectuees + eleve.solde_heures || 1)) * 100)}%`,
+                            backgroundColor: eleve.solde_heures === 0 ? '#DC2626' : eleve.solde_heures <= 2 ? '#D97706' : '#2563EB',
                           }}
                         />
                       </div>
-                      <span className="text-sm text-[#0F172A]">{eleve.solde_heures}h</span>
+                      <span className={`text-sm font-medium ${
+                        eleve.solde_heures === 0 ? 'text-[#DC2626]' : eleve.solde_heures <= 2 ? 'text-[#D97706]' : 'text-[#0F172A]'
+                      }`}>{eleve.solde_heures}h</span>
+                      {eleve.solde_heures <= 2 && (
+                        <AlertTriangle className={`w-3.5 h-3.5 shrink-0 ${eleve.solde_heures === 0 ? 'text-[#DC2626]' : 'text-[#D97706]'}`} />
+                      )}
                     </div>
                   </td>
                   <td className="px-4 py-3">
@@ -224,9 +232,9 @@ function StatCard({
   icon: React.ReactNode
   label: string
   value: number
-  color: 'blue' | 'orange' | 'green'
+  color: 'blue' | 'orange' | 'green' | 'red'
 }) {
-  const bg = { blue: 'bg-[#2563EB]/10', orange: 'bg-[#D97706]/10', green: 'bg-[#16A34A]/10' }
+  const bg = { blue: 'bg-[#2563EB]/10', orange: 'bg-[#D97706]/10', green: 'bg-[#16A34A]/10', red: 'bg-[#DC2626]/10' }
   return (
     <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 flex items-center gap-4">
       <div className={`w-10 h-10 rounded-lg ${bg[color]} flex items-center justify-center`}>

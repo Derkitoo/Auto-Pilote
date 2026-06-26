@@ -53,7 +53,8 @@ export function useUpdateLecon() {
       qc.invalidateQueries({ queryKey: leconsKeys.all })
       qc.invalidateQueries({ queryKey: leconsKeys.detail(lecon.id) })
       qc.invalidateQueries({ queryKey: ['dashboard'] })
-      toast.success('Leçon mise à jour')
+      qc.invalidateQueries({ queryKey: ['eleves'] })
+      qc.invalidateQueries({ queryKey: ['eleve', lecon.eleve_id] })
     },
     onError: () => toast.error('Erreur lors de la mise à jour'),
   })

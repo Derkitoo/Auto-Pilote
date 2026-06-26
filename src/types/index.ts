@@ -244,3 +244,23 @@ export type UpdateLeconInput = Partial<CreateLeconInput>
 export type CreateMoniteurInput = Omit<Moniteur, 'id' | 'auto_ecole_id' | 'created_at' | 'updated_at'>
 
 export type UpdateMoniteurInput = Partial<CreateMoniteurInput>
+
+// ─── Livret pédagogique ─────────────────────────────────────────────────────
+
+export type NiveauCompetence = 1 | 2 | 3 | 4 | 5
+
+export interface EntreeLivret {
+  competence_id: number
+  niveau: NiveauCompetence
+  commentaire: string | null
+  date_maj: string
+  moniteur_id: string
+}
+
+export interface Livret {
+  id: string
+  eleve_id: string
+  entries: EntreeLivret[]
+  created_at: string
+  updated_at: string
+}

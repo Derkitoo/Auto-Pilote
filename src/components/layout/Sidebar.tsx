@@ -36,17 +36,17 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'relative flex flex-col bg-white border-r border-[#E2E8F0] transition-all duration-200 shrink-0',
+        'relative flex flex-col bg-white dark:bg-slate-900 border-r border-[#E2E8F0] dark:border-slate-700 transition-all duration-200 shrink-0',
         collapsed ? 'w-16' : 'w-56'
       )}
     >
       {/* Logo */}
-      <div className={cn('flex items-center gap-3 px-4 h-16 border-b border-[#E2E8F0]', collapsed && 'justify-center px-0')}>
-        <div className="w-8 h-8 bg-[#2563EB] rounded-lg flex items-center justify-center shrink-0">
+      <div className={cn('flex items-center gap-3 px-4 h-16 border-b border-[#E2E8F0] dark:border-slate-700', collapsed && 'justify-center px-0')}>
+        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
           <span className="text-white font-bold text-sm">P</span>
         </div>
         {!collapsed && (
-          <span className="font-semibold text-[#0F172A] text-sm truncate">PermisFlow</span>
+          <span className="font-semibold text-[#0F172A] dark:text-slate-100 text-sm truncate">PermisFlow</span>
         )}
       </div>
 
@@ -61,8 +61,8 @@ export function Sidebar() {
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 collapsed && 'justify-center px-0',
                 isActive
-                  ? 'bg-[#2563EB]/10 text-[#2563EB]'
-                  : 'text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-[#64748B] dark:text-slate-400 hover:bg-[#F8FAFC] dark:hover:bg-slate-800 hover:text-[#0F172A] dark:hover:text-slate-100'
               )
             }
             title={collapsed ? label : undefined}
@@ -74,7 +74,7 @@ export function Sidebar() {
       </nav>
 
       {/* Settings + collapse */}
-      <div className="p-2 border-t border-[#E2E8F0] space-y-0.5">
+      <div className="p-2 border-t border-[#E2E8F0] dark:border-slate-700 space-y-0.5">
         <NavLink
           to="/settings"
           className={({ isActive }) =>
@@ -82,8 +82,8 @@ export function Sidebar() {
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
               collapsed && 'justify-center px-0',
               isActive
-                ? 'bg-[#2563EB]/10 text-[#2563EB]'
-                : 'text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]'
+                ? 'bg-primary/10 text-primary'
+                : 'text-[#64748B] dark:text-slate-400 hover:bg-[#F8FAFC] dark:hover:bg-slate-800 hover:text-[#0F172A] dark:hover:text-slate-100'
             )
           }
           title={collapsed ? 'Paramètres' : undefined}
@@ -95,7 +95,7 @@ export function Sidebar() {
         <button
           onClick={() => setCollapsed(c => !c)}
           className={cn(
-            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition-colors',
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#64748B] dark:text-slate-400 hover:bg-[#F8FAFC] dark:hover:bg-slate-800 hover:text-[#0F172A] dark:hover:text-slate-100 transition-colors',
             collapsed && 'justify-center px-0'
           )}
           title={collapsed ? 'Agrandir' : 'Réduire'}

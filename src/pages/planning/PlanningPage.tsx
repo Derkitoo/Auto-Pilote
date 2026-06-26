@@ -2,13 +2,14 @@ import { useState, useMemo } from 'react'
 import { Calendar, dateFnsLocalizer, type Event } from 'react-big-calendar'
 import { format, parse, startOfWeek, getDay } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight, CheckCircle, XCircle, AlertTriangle, UserX } from 'lucide-react'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 
 import { useLecons, useCreateLecon, useUpdateLecon, useDeleteLecon } from '@/hooks/useLecons'
 import { useMoniteurs } from '@/hooks/useMoniteurs'
 import { useAuth } from '@/contexts/AuthContext'
 import { LeconForm } from '@/components/planning/LeconForm'
+import { LeconStatutBadge } from '@/components/lecons/LeconStatutBadge'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -75,13 +76,21 @@ const localizer = dateFnsLocalizer({
 })
 
 const STATUT_OPACITY: Record<StatutLecon, number> = {
-  planifiee: 0.7,
+  planifiee: 0.85,
   confirmee: 1,
   effectuee: 0.5,
-  annulee_eleve: 0.3,
-  annulee_moniteur: 0.3,
-  no_show: 0.3,
+  annulee_eleve: 0.25,
+  annulee_moniteur: 0.25,
+  no_show: 0.25,
 }
+
+const STATUT_ANNULE: StatutLecon[] = ['annulee_eleve', 'annulee_moniteur', 'no_show']
+
+const MOTIFS_ANNULATION: { statut: StatutLecon; label: string; icon: React.ReactNode; color: string }[] = [
+  { statut: 'annulee_eleve',    label: "Annulée — élève",    icon: <XCircle className="w-4 h-4" />,   color: '#D97706' },
+  { statut: 'annulee_moniteur', label: "Annulée — moniteur", icon: <XCircle className="w-4 h-4" />,   color: '#7C3AED' },
+  { statut: 'no_show',          label: "No-show élève",      icon: <UserX className="w-4 h-4" />,     color: '#DC2626' },
+]
 
 const VUES: { value: CalendarView; label: string }[] = [
   { value: 'day', label: 'Jour' },
@@ -136,17 +145,21 @@ export function PlanningPage() {
       }))
   }, [lecons, moniteursActifs])
 
-  const eventPropGetter = (event: CalEvent) => ({
-    style: {
-      backgroundColor: event.color,
-      opacity: STATUT_OPACITY[event.lecon.statut] ?? 1,
-      borderRadius: '6px',
-      border: 'none',
-      color: '#fff',
-      fontSize: '12px',
-      padding: '2px 6px',
-    },
-  })
+  const eventPropGetter = (event: CalEvent) => {
+    const isAnnule = STATUT_ANNULE.includes(event.lecon.statut)
+    return {
+      style: {
+        backgroundColor: isAnnule ? '#94A3B8' : event.color,
+        opacity: STATUT_OPACITY[event.lecon.statut] ?? 1,
+        borderRadius: '6px',
+        border: 'none',
+        color: '#fff',
+        fontSize: '12px',
+        padding: '2px 6px',
+        textDecoration: isAnnule ? 'line-through' : 'none',
+      },
+    }
+  }
 
   const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
     // Pré-remplit les dates dans le form — on ouvre juste le modal
@@ -348,7 +361,70 @@ export function PlanningPage() {
                 <span className="text-[#64748B]">Date</span>
                 <span className="font-medium text-[#0F172A]">{formatDate(selectedLecon.date_debut, "dd/MM/yyyy 'de' HH:mm")} → {formatDate(selectedLecon.date_fin, 'HH:mm')}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-[#64748B]">Statut actuel</span>
+                <LeconStatutBadge statut={selectedLecon.statut} />
+              </div>
             </div>
+
+            {/* ── Actions rapides ── */}
+            {!STATUT_ANNULE.includes(selectedLecon.statut) && (
+              <div className="mb-4 space-y-2">
+                <p className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wide">Actions rapides</p>
+                <div className="flex flex-wrap gap-2">
+                  {/* Marquer effectuée */}
+                  {selectedLecon.statut !== 'effectuee' && (
+                    <button
+                      onClick={async () => {
+                        await updateLecon.mutateAsync({ id: selectedLecon.id, data: { statut: 'effectuee' } })
+                        setShowEdit(false); setSelectedLecon(null)
+                      }}
+                      disabled={updateLecon.isPending}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#DCFCE7] text-[#16A34A] text-xs font-semibold hover:bg-[#BBF7D0] transition-colors"
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      Marquer effectuée
+                    </button>
+                  )}
+                  {/* Motifs annulation */}
+                  {MOTIFS_ANNULATION.map(motif => (
+                    <button
+                      key={motif.statut}
+                      onClick={async () => {
+                        await updateLecon.mutateAsync({ id: selectedLecon.id, data: { statut: motif.statut } })
+                        setShowEdit(false); setSelectedLecon(null)
+                      }}
+                      disabled={updateLecon.isPending}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-80 transition-opacity"
+                      style={{ backgroundColor: motif.color + '20', color: motif.color }}
+                    >
+                      {motif.icon}
+                      {motif.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Bannière leçon annulée */}
+            {STATUT_ANNULE.includes(selectedLecon.statut) && (
+              <div className="mb-4 flex items-center gap-2 p-3 bg-[#FEF3C7] border border-[#FCD34D] rounded-lg text-sm text-[#D97706]">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>
+                  Cette leçon est {selectedLecon.statut === 'no_show' ? 'marquée no-show' : 'annulée'}.
+                  <button
+                    className="ml-2 underline font-medium"
+                    onClick={async () => {
+                      await updateLecon.mutateAsync({ id: selectedLecon.id, data: { statut: 'planifiee' } })
+                      setShowEdit(false); setSelectedLecon(null)
+                    }}
+                  >
+                    Remettre en planifiée
+                  </button>
+                </span>
+              </div>
+            )}
+
             <LeconForm
               defaultValues={selectedLecon}
               onSubmit={async (data) => {

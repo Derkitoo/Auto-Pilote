@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { Layout } from '@/components/layout/Layout'
 import { LoginPage } from '@/pages/auth/LoginPage'
@@ -34,6 +35,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <ThemeProvider>
         <HashRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
@@ -75,6 +77,7 @@ function App() {
           <Toaster position="top-right" />
           <InstallPrompt />
         </HashRouter>
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   )
